@@ -1,2 +1,2 @@
-# Student_Management_Information
+# Student_Information_Management
 JAVA Mini Project...
