@@ -23,7 +23,7 @@ public class StudentDAO {
             ps.setString(4, student.getPhoneNumber());
             ps.setDate(5, Date.valueOf(student.getDateOfBirth()));
             ps.setString(6, student.getAddress());
-            ps.executeUpdate();
+            ps.executeUpdate(); 
         }
     }
 
