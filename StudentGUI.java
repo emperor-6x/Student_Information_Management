@@ -4,116 +4,284 @@ import model.Student;
 import service.StudentService;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public class StudentGUI extends JFrame {
+public class StudentGUI extends Frame {
     private final StudentService studentService;
 
     public StudentGUI(StudentService studentService) {
         this.studentService = studentService;
 
-        // Set frame properties
+        // Set Frame properties
         setTitle("Student Management System");
-        setSize(600, 400);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setSize(700, 550);
+        setLayout(null);
 
-        // Main Panel
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(6, 2, 10, 10));
+        // Label and Text Field for Student ID
+        Label idLabel = new Label("Student ID:");
+        idLabel.setBounds(50, 50, 100, 25);
+        add(idLabel);
 
-        // Components
-        JLabel lblName = new JLabel("Name: ");
-        JTextField txtName = new JTextField();
-        JLabel lblEmail = new JLabel("Email: ");
-        JTextField txtEmail = new JTextField();
-        JLabel lblPhoneNumber = new JLabel("Phone Number: ");
-        JTextField txtPhoneNumber = new JTextField();
-        JLabel lblDateOfBirth = new JLabel("Date of Birth (YYYY-MM-DD): ");
-        JTextField txtDateOfBirth = new JTextField();
-        JLabel lblAddress = new JLabel("Address: ");
-        JTextField txtAddress = new JTextField();
+        TextField idField = new TextField();
+        idField.setBounds(160, 50, 200, 25);
+        add(idField);
 
-        JButton btnAdd = new JButton("Add Student");
-        JButton btnViewAll = new JButton("View All Students");
+        // Label and Text Field for Name
+        Label nameLabel = new Label("Name:");
+        nameLabel.setBounds(50, 90, 100, 25);
+        add(nameLabel);
 
-        // Add components to panel
-        panel.add(lblName);
-        panel.add(txtName);
-        panel.add(lblEmail);
-        panel.add(txtEmail);
-        panel.add(lblPhoneNumber);
-        panel.add(txtPhoneNumber);
-        panel.add(lblDateOfBirth);
-        panel.add(txtDateOfBirth);
-        panel.add(lblAddress);
-        panel.add(txtAddress);
+        TextField nameField = new TextField();
+        nameField.setBounds(160, 90, 200, 25);
+        add(nameField);
 
-        // Buttons
-        JPanel buttonsPanel = new JPanel();
-        buttonsPanel.add(btnAdd);
-        buttonsPanel.add(btnViewAll);
+        // Label and Text Field for Email
+        Label emailLabel = new Label("Email:");
+        emailLabel.setBounds(50, 130, 100, 25);
+        add(emailLabel);
 
-        add(panel, BorderLayout.CENTER);
-        add(buttonsPanel, BorderLayout.SOUTH);
+        TextField emailField = new TextField();
+        emailField.setBounds(160, 130, 200, 25);
+        add(emailField);
 
-        // Button Actions
-        btnAdd.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    String name = txtName.getText();
-                    String email = txtEmail.getText();
-                    String phoneNumber = txtPhoneNumber.getText();
-                    String dateOfBirth = txtDateOfBirth.getText();
-                    String address = txtAddress.getText();
+        // Label and Text Field for Phone Number
+        Label phoneLabel = new Label("Phone Number:");
+        phoneLabel.setBounds(50, 170, 100, 25);
+        add(phoneLabel);
 
-                    Student student = new Student(0, name, email, phoneNumber, dateOfBirth, address);
-                    studentService.addStudent(student);
+        TextField phoneField = new TextField();
+        phoneField.setBounds(160, 170, 200, 25);
+        add(phoneField);
 
-                    JOptionPane.showMessageDialog(null, "Student added successfully!");
-                } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
-                }
+        // Label and Text Field for Date of Birth
+        Label dobLabel = new Label("Date of Birth:");
+        dobLabel.setBounds(50, 210, 100, 25);
+        add(dobLabel);
+
+        TextField dobField = new TextField();
+        dobField.setBounds(160, 210, 200, 25);
+        add(dobField);
+
+        // Label and Text Field for Address
+        Label addressLabel = new Label("Address:");
+        addressLabel.setBounds(50, 250, 100, 25);
+        add(addressLabel);
+
+        TextField addressField = new TextField();
+        addressField.setBounds(160, 250, 200, 25);
+        add(addressField);
+
+        // Add Student Button
+        Button addButton = new Button("Add Student");
+        addButton.setBounds(50, 300, 120, 30);
+        add(addButton);
+        addButton.addActionListener(e -> {
+            try {
+                int studentId = Integer.parseInt(idField.getText());
+                String name = nameField.getText();
+                String email = emailField.getText();
+                String phoneNumber = phoneField.getText();
+                String dateOfBirth = dobField.getText();
+                String address = addressField.getText();
+
+                Student student = new Student(studentId, name, email, phoneNumber, dateOfBirth, address);
+                studentService.addStudent(student);
+                showMessage("Student added successfully!");
+            } catch (NumberFormatException nfe) {
+                showMessage("Please enter a valid Student ID!");
+            } catch (SQLException sqlException) {
+                showMessage("Error adding student: " + sqlException.getMessage());
             }
         });
 
-        btnViewAll.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    java.util.List<Student> students = studentService.getAllStudents();
+        // Delete Student Button
+        Button deleteButton = new Button("Delete Student");
+        deleteButton.setBounds(190, 300, 120, 30);
+        add(deleteButton);
+        deleteButton.addActionListener(e -> {
+            try {
+                String input = showInputDialog("Enter Student ID to delete:");
+                if (input != null) {
+                    int studentId = Integer.parseInt(input);
+                    studentService.deleteStudent(studentId);
+                    showMessage("Student deleted successfully!");
+                }
+            } catch (NumberFormatException nfe) {
+                showMessage("Please enter a valid Student ID!");
+            } catch (SQLException sqlException) {
+                showMessage("Error deleting student: " + sqlException.getMessage());
+            }
+        });
 
-                    // Display all students in a new window
-                    JFrame viewFrame = new JFrame("All Students");
-                    viewFrame.setSize(500, 300);
-                    viewFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        // Show All Students Button
+        Button showButton = new Button("Show All Students");
+        showButton.setBounds(330, 300, 150, 30);
+        add(showButton);
+        showButton.addActionListener(e -> {
+            try {
+                // New JFrame to display the table of students
+                JFrame tableFrame = new JFrame("All Students");
+                tableFrame.setSize(900, 500);
+                tableFrame.setLayout(new BorderLayout());
 
-                    String[] columnNames = {"ID", "Name", "Email", "Phone", "DOB", "Address"};
-                    String[][] data = new String[students.size()][6];
+                // Add JTextField for searching by name
+                JTextField searchField = new JTextField("Search by Name...");
+                searchField.setHorizontalAlignment(JTextField.LEFT);
+                tableFrame.add(searchField, BorderLayout.NORTH);
 
-                    for (int i = 0; i < students.size(); i++) {
-                        Student s = students.get(i);
-                        data[i][0] = String.valueOf(s.getStudentId());
-                        data[i][1] = s.getName();
-                        data[i][2] = s.getEmail();
-                        data[i][3] = s.getPhoneNumber();
-                        data[i][4] = s.getDateOfBirth();
-                        data[i][5] = s.getAddress();
+                // Load all students from the service and display in JTable
+                String[] columnHeaders = {"Student ID", "Name", "Email", "Phone", "DOB", "Address"};
+                List<Student> students = studentService.getAllStudents();
+                Object[][] data = prepareStudentTableData(students);
+
+                DefaultTableModel tableModel = new DefaultTableModel(data, columnHeaders);
+                JTable table = new JTable(tableModel);
+                table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+                // Add JTable to JScrollPane for scrollable view
+                JScrollPane scrollPane = new JScrollPane(table);
+                tableFrame.add(scrollPane, BorderLayout.CENTER);
+
+                // Add KeyListener to searchField for search functionality
+                searchField.addKeyListener(new KeyAdapter() {
+                    @Override
+                    public void keyReleased(KeyEvent e) {
+                        String query = searchField.getText().toLowerCase();
+                        List<Student> filteredStudents = students.stream()
+                                .filter(student -> student.getName().toLowerCase().contains(query))
+                                .collect(Collectors.toList());
+                        updateJTable(tableModel, filteredStudents);
+                    }
+                });
+
+                // Add "Update Selected Student" button
+                JButton updateButton = new JButton("Update Selected Student");
+                updateButton.addActionListener(e1 -> {
+                    int selectedRow = table.getSelectedRow();
+                    if (selectedRow == -1) {
+                        showMessage("Please select a student to update.");
+                        return;
                     }
 
-                    JTable table = new JTable(data, columnNames);
-                    JScrollPane scrollPane = new JScrollPane(table);
+                    try {
+                        int studentId = (int) tableModel.getValueAt(selectedRow, 0); // Get Student ID
+                        Student student = studentService.getStudentById(studentId);
+                        if (student != null) {
+                            String newName = showInputDialog("Enter New Name:");
+                            String newEmail = showInputDialog("Enter New Email:");
+                            String newPhone = showInputDialog("Enter New Phone Number:");
+                            String newDob = showInputDialog("Enter New Date of Birth:");
+                            String newAddress = showInputDialog("Enter New Address:");
 
-                    viewFrame.add(scrollPane, BorderLayout.CENTER);
-                    viewFrame.setVisible(true);
-                } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
-                }
+                            student.setName(newName != null ? newName : student.getName());
+                            student.setEmail(newEmail != null ? newEmail : student.getEmail());
+                            student.setPhoneNumber(newPhone != null ? newPhone : student.getPhoneNumber());
+                            student.setDateOfBirth(newDob != null ? newDob : student.getDateOfBirth());
+                            student.setAddress(newAddress != null ? newAddress : student.getAddress());
+
+                            studentService.updateStudent(student);
+                            showMessage("Student updated successfully!");
+                            // Refresh table with latest data
+                            updateJTable(tableModel, studentService.getAllStudents());
+                        }
+                    } catch (SQLException ex) {
+                        showMessage("Error occurred while updating student: " + ex.getMessage());
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
+                });
+                tableFrame.add(updateButton, BorderLayout.SOUTH);
+
+                tableFrame.setVisible(true);
+
+            } catch (SQLException sqlException) {
+                showMessage("Error retrieving students: " + sqlException.getMessage());
             }
         });
+
+        // Close button behavior
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                dispose();
+            }
+        });
+
+        // Set Frame visibility
+        setVisible(true);
+    }
+
+    /**
+     * Prepares student data in 2D array format for JTable.
+     */
+    private Object[][] prepareStudentTableData(List<Student> students) {
+        Object[][] data = new Object[students.size()][6];
+        for (int i = 0; i < students.size(); i++) {
+            Student student = students.get(i);
+            data[i][0] = student.getStudentId();
+            data[i][1] = student.getName();
+            data[i][2] = student.getEmail();
+            data[i][3] = student.getPhoneNumber();
+            data[i][4] = student.getDateOfBirth();
+            data[i][5] = student.getAddress();
+        }
+        return data;
+    }
+
+    /**
+     * Updates the JTable with the given list of students.
+     */
+    private void updateJTable(DefaultTableModel tableModel, List<Student> students) {
+        tableModel.setRowCount(0); // Clear existing rows
+        for (Student student : students) {
+            tableModel.addRow(new Object[]{
+                    student.getStudentId(),
+                    student.getName(),
+                    student.getEmail(),
+                    student.getPhoneNumber(),
+                    student.getDateOfBirth(),
+                    student.getAddress()
+            });
+        }
+    }
+
+    /**
+     * Displays a simple message dialog.
+     */
+    private void showMessage(String message) {
+        Dialog dialog = new Dialog(this, "Message", true);
+        dialog.setSize(300, 150);
+        dialog.setLayout(new FlowLayout());
+        dialog.add(new Label(message));
+        Button okButton = new Button("OK");
+        okButton.addActionListener(e -> dialog.dispose());
+        dialog.add(okButton);
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Displays a custom input dialog and returns the input value.
+     */
+    private String showInputDialog(String message) {
+        Dialog dialog = new Dialog(this, "Input", true);
+        dialog.setSize(300, 150);
+        dialog.setLayout(new FlowLayout());
+        dialog.add(new Label(message));
+        TextField inputField = new TextField(20);
+        dialog.add(inputField);
+        Button okButton = new Button("OK");
+        final String[] input = {null};
+        okButton.addActionListener(e -> {
+            input[0] = inputField.getText();
+            dialog.dispose();
+        });
+        dialog.add(okButton);
+        dialog.setVisible(true);
+        return input[0];
     }
 }
