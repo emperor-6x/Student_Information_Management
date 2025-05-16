@@ -1,49 +1,78 @@
 package dao;
 
 import model.Student;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StudentDAO {
-    private Connection connection;
+    private final String dbUrl;
+    private final String username;
+    private final String password;
 
-    // Establish connection to the MySQL Database
-    public StudentDAO(String dbUrl, String username, String password) throws SQLException {
-        connection = DriverManager.getConnection(dbUrl, username, password);
+    public StudentDAO(String dbUrl, String username, String password) {
+        this.dbUrl = dbUrl;
+        this.username = username;
+        this.password = password;
     }
 
-    // Add a New Student
     public void addStudent(Student student) throws SQLException {
-        String sql = "INSERT INTO STUDENTS (STUDENT_ID, NAME, EMAIL, PHONE_NUMBER, DATE_OF_BIRTH, ADDRESS) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, student.getStudentId());
-            ps.setString(2, student.getName());
-            ps.setString(3, student.getEmail());
-            ps.setString(4, student.getPhoneNumber());
-            ps.setDate(5, Date.valueOf(student.getDateOfBirth()));
-            ps.setString(6, student.getAddress());
-            ps.executeUpdate(); 
+        String query = "INSERT INTO students (student_id, name, email, phone_number, date_of_birth, address) VALUES (?,?,?,?,?,?)";
+
+        try (Connection connection = DriverManager.getConnection(dbUrl, username, password);
+             PreparedStatement stmt = connection.prepareStatement(query)) {
+
+            stmt.setInt(1, student.getStudentId());
+            stmt.setString(2, student.getName());
+            stmt.setString(3, student.getEmail());
+            stmt.setString(4, student.getPhoneNumber());
+            stmt.setString(5, student.getDateOfBirth());
+            stmt.setString(6, student.getAddress());
+
+            stmt.executeUpdate();
         }
     }
 
-    // Retrieve All Students
     public List<Student> getAllStudents() throws SQLException {
-        String sql = "SELECT * FROM STUDENTS";
         List<Student> students = new ArrayList<>();
-        try (Statement statement = connection.createStatement();
-             ResultSet rs = statement.executeQuery(sql)) {
+        String query = "SELECT * FROM students";
+
+        try (Connection connection = DriverManager.getConnection(dbUrl, username, password);
+             Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
             while (rs.next()) {
-                students.add(new Student(
-                        rs.getInt("STUDENT_ID"),
-                        rs.getString("NAME"),
-                        rs.getString("EMAIL"),
-                        rs.getString("PHONE_NUMBER"),
-                        rs.getDate("DATE_OF_BIRTH").toString(),
-                        rs.getString("ADDRESS")
-                ));
+                int studentId = rs.getInt("student_id");
+                String name = rs.getString("name");
+                String email = rs.getString("email");
+                String phoneNumber = rs.getString("phone_number");
+                String dateOfBirth = rs.getString("date_of_birth");
+                String address = rs.getString("address");
+
+                students.add(new Student(studentId, name, email, phoneNumber, dateOfBirth, address));
             }
         }
+
         return students;
+    }
+
+    public void deleteStudent(int studentId) throws SQLException {
+        String query = "DELETE FROM students WHERE student_id = ?";
+
+        try (Connection connection = DriverManager.getConnection(dbUrl, username, password);
+             PreparedStatement stmt = connection.prepareStatement(query)) {
+
+            stmt.setInt(1, studentId);
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected == 0) {
+                throw new SQLException("No student found with ID: " + studentId);
+            }
+        }
+    }
+
+    public Student findStudentById(int studentId) {
+        return null;
     }
 }
